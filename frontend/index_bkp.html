@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual do Carro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #001c38;
+    --bg-alt: #001c38;
+    --panel: #001322;
+    --panel-2: #1e69a7;
+    --border: #153b57;
+    --border-soft: #01080c;
+    --text: #ecebe5;
+    --text-dim: #9aa0a6;
+    --text-faint: #9aa0a6;
+    --amber: #6eb80f;
+    --amber-dim: #161108;
+    --teal: #cfcc0e;
+    --red: #ff4000;
+    --radius: 10px;
+    --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, #1c2126 0%, transparent 60%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 2px, transparent 2px 8px),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3, .brand, .plate-number, nav button{
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:.02em; }
+
+  ::selection{ background:var(--amber); color:#1a1400; }
+  :focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  input, select{ font-family:inherit; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ---------- layout shells ---------- */
+  #auth-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  #app-screen{ display:none; min-height:100vh; }
+  #app-screen.active{ display:flex; flex-direction:column; }
+
+  /* ---------- brand / signature stripe ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.01em;
+  }
+  .brand .stripe{
+    width:10px; height:24px; border-radius:2px;
+    background:linear-gradient(180deg, var(--amber), var(--teal));
+  }
+
+  /* ---------- auth card ---------- */
+  .auth-card{
+    width:100%;
+    max-width:400px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:4px;
+    background:linear-gradient(90deg, var(--amber), var(--teal));
+  }
+  .auth-header{ margin-bottom:24px; }
+  .auth-header p{ color:var(--text-dim); font-size:13.5px; margin:6px 0 0; }
+
+  .seg{
+    display:flex;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:3px;
+    margin-bottom:22px;
+  }
+  .seg button{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    padding:8px 10px;
+    border-radius:6px;
+    font-size:13.5px;
+    font-weight:600;
+    transition:background .15s, color .15s;
+  }
+  .seg button.active{ background:var(--panel-2); color:var(--text); }
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:7px;
+    font-size:14px;
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{ border-color:var(--amber); }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .btn{
+    width:100%;
+    background:var(--amber);
+    color:#1a1400;
+    border:none;
+    padding:11px 14px;
+    border-radius:7px;
+    font-weight:700;
+    font-size:14px;
+    transition:filter .15s, transform .1s;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:scale(.99); }
+  .btn.secondary{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn.secondary:hover{ border-color:var(--text-dim); }
+  .btn.danger{ background:var(--red); color:#2a0f06; }
+  .btn.small{ width:auto; padding:7px 12px; font-size:12.5px; }
+
+  .banner{
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:7px;
+    margin-bottom:14px;
+    border:1px solid transparent;
+    display:none;
+  }
+  .banner.error{ display:block; background:rgba(217,119,87,.12); border-color:rgba(217,119,87,.4); color:#f3b39e; }
+  .banner.ok{ display:block; background:rgba(79,160,147,.12); border-color:rgba(79,160,147,.4); color:#a6d9d0; }
+
+  .advanced{ margin-top:18px; }
+  .advanced summary{ font-size:12px; color:var(--text-faint); cursor:pointer; }
+  .advanced .field{ margin-top:10px; }
+
+  /* ---------- app shell ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 28px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--bg-alt);
+  }
+  .topbar .who{ display:flex; align-items:center; gap:14px; }
+  .topbar .who span{ color:var(--text-dim); font-size:13px; }
+
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    padding:0 28px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--bg-alt);
+  }
+  nav.tabs button{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    padding:14px 6px;
+    margin-right:22px;
+    font-size:14px;
+    font-weight:600;
+    border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button.active{ color:var(--amber); border-color:var(--amber); }
+
+  main{ flex:1; padding:28px; max-width:1100px; width:100%; margin:0 auto; }
+  .view{ display:none; animation:fadeIn .25s ease; }
+  .view.active{ display:block; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
+
+  .grid-2{ display:grid; grid-template-columns:340px 1fr; gap:24px; align-items:start; }
+  @media (max-width:820px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .panel h3{ margin:0 0 16px; font-size:15px; }
+
+  .empty{
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    padding:32px 20px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+  }
+
+  /* ---------- vehicle "plate" cards — signature element ---------- */
+  .plate-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+  .plate-card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:var(--panel);
+    transition:transform .15s, border-color .15s;
+  }
+  .plate-card:hover{ transform:translateY(-2px); border-color:var(--border-soft); }
+  .plate-band{
+    background:linear-gradient(180deg,#1c3f52,#173442);
+    color:#bfe4f0;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:6px 14px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .plate-number{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:.06em;
+    padding:14px 14px 4px;
+  }
+  .plate-sub{
+    padding:0 14px 14px;
+    color:var(--text-dim);
+    font-size:13px;
+  }
+  .plate-chips{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:0 14px 14px;
+  }
+  .chip{
+    font-size:11px;
+    color:var(--text-dim);
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:20px;
+  }
+  .plate-actions{
+    display:flex; gap:8px;
+    padding:0 14px 14px;
+  }
+
+  /* ---------- maintenance list ---------- */
+  .m-row{
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    gap:14px;
+    align-items:center;
+    padding:12px 14px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    margin-bottom:8px;
+    background:var(--bg-alt);
+  }
+  .m-row .desc{ font-size:14px; }
+  .m-row .meta{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .m-row .cost{ color:var(--teal); font-weight:600; text-align:right; }
+  .m-row .km{ color:var(--text-dim); text-align:right; }
+
+  select#vehicle-select{
+    width:100%;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:7px;
+    font-size:14px;
+    margin-bottom:16px;
+  }
+
+  .footnote{ color:var(--text-faint); font-size:11.5px; margin-top:10px; }
+</style>
+<!-- 
+<style>
+  :root{
+    --bg: #14171a;
+    --bg-alt: #191d21;
+    --panel: #1d2226;
+    --panel-2: #242a2f;
+    --border: #2d3439;
+    --border-soft: #262c31;
+    --text: #ecebe5;
+    --text-dim: #9aa0a6;
+    --text-faint: #676e74;
+    --amber: #e8a63d;
+    --amber-dim: #6b5024;
+    --teal: #4fa093;
+    --red: #d97757;
+    --radius: 10px;
+    --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, #1c2126 0%, transparent 60%),
+      repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0 2px, transparent 2px 8px),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3, .brand, .plate-number, nav button{
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; letter-spacing:.02em; }
+
+  ::selection{ background:var(--amber); color:#1a1400; }
+  :focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+  button{ font-family:inherit; cursor:pointer; }
+  input, select{ font-family:inherit; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  /* ---------- layout shells ---------- */
+  #auth-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  #app-screen{ display:none; min-height:100vh; }
+  #app-screen.active{ display:flex; flex-direction:column; }
+
+  /* ---------- brand / signature stripe ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:.01em;
+  }
+  .brand .stripe{
+    width:10px; height:24px; border-radius:2px;
+    background:linear-gradient(180deg, var(--amber), var(--teal));
+  }
+
+  /* ---------- auth card ---------- */
+  .auth-card{
+    width:100%;
+    max-width:400px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .auth-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:4px;
+    background:linear-gradient(90deg, var(--amber), var(--teal));
+  }
+  .auth-header{ margin-bottom:24px; }
+  .auth-header p{ color:var(--text-dim); font-size:13.5px; margin:6px 0 0; }
+
+  .seg{
+    display:flex;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:3px;
+    margin-bottom:22px;
+  }
+  .seg button{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    padding:8px 10px;
+    border-radius:6px;
+    font-size:13.5px;
+    font-weight:600;
+    transition:background .15s, color .15s;
+  }
+  .seg button.active{ background:var(--panel-2); color:var(--text); }
+
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:7px;
+    font-size:14px;
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{ border-color:var(--amber); }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .btn{
+    width:100%;
+    background:var(--amber);
+    color:#1a1400;
+    border:none;
+    padding:11px 14px;
+    border-radius:7px;
+    font-weight:700;
+    font-size:14px;
+    transition:filter .15s, transform .1s;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:scale(.99); }
+  .btn.secondary{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn.secondary:hover{ border-color:var(--text-dim); }
+  .btn.danger{ background:var(--red); color:#2a0f06; }
+  .btn.small{ width:auto; padding:7px 12px; font-size:12.5px; }
+
+  .banner{
+    font-size:13px;
+    padding:10px 12px;
+    border-radius:7px;
+    margin-bottom:14px;
+    border:1px solid transparent;
+    display:none;
+  }
+  .banner.error{ display:block; background:rgba(217,119,87,.12); border-color:rgba(217,119,87,.4); color:#f3b39e; }
+  .banner.ok{ display:block; background:rgba(79,160,147,.12); border-color:rgba(79,160,147,.4); color:#a6d9d0; }
+
+  .advanced{ margin-top:18px; }
+  .advanced summary{ font-size:12px; color:var(--text-faint); cursor:pointer; }
+  .advanced .field{ margin-top:10px; }
+
+  /* ---------- app shell ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 28px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--bg-alt);
+  }
+  .topbar .who{ display:flex; align-items:center; gap:14px; }
+  .topbar .who span{ color:var(--text-dim); font-size:13px; }
+
+  nav.tabs{
+    display:flex;
+    gap:4px;
+    padding:0 28px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--bg-alt);
+  }
+  nav.tabs button{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    padding:14px 6px;
+    margin-right:22px;
+    font-size:14px;
+    font-weight:600;
+    border-bottom:2px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  nav.tabs button.active{ color:var(--amber); border-color:var(--amber); }
+
+  main{ flex:1; padding:28px; max-width:1100px; width:100%; margin:0 auto; }
+  .view{ display:none; animation:fadeIn .25s ease; }
+  .view.active{ display:block; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
+
+  .grid-2{ display:grid; grid-template-columns:340px 1fr; gap:24px; align-items:start; }
+  @media (max-width:820px){ .grid-2{ grid-template-columns:1fr; } }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .panel h3{ margin:0 0 16px; font-size:15px; }
+
+  .empty{
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    padding:32px 20px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+  }
+
+  /* ---------- vehicle "plate" cards — signature element ---------- */
+  .plate-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; }
+  .plate-card{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:var(--panel);
+    transition:transform .15s, border-color .15s;
+  }
+  .plate-card:hover{ transform:translateY(-2px); border-color:var(--border-soft); }
+  .plate-band{
+    background:linear-gradient(180deg,#1c3f52,#173442);
+    color:#bfe4f0;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:6px 14px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .plate-number{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:.06em;
+    padding:14px 14px 4px;
+  }
+  .plate-sub{
+    padding:0 14px 14px;
+    color:var(--text-dim);
+    font-size:13px;
+  }
+  .plate-chips{
+    display:flex; flex-wrap:wrap; gap:6px;
+    padding:0 14px 14px;
+  }
+  .chip{
+    font-size:11px;
+    color:var(--text-dim);
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    padding:3px 8px;
+    border-radius:20px;
+  }
+  .plate-actions{
+    display:flex; gap:8px;
+    padding:0 14px 14px;
+  }
+
+  /* ---------- maintenance list ---------- */
+  .m-row{
+    display:grid;
+    grid-template-columns:1fr auto auto;
+    gap:14px;
+    align-items:center;
+    padding:12px 14px;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    margin-bottom:8px;
+    background:var(--bg-alt);
+  }
+  .m-row .desc{ font-size:14px; }
+  .m-row .meta{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .m-row .cost{ color:var(--teal); font-weight:600; text-align:right; }
+  .m-row .km{ color:var(--text-dim); text-align:right; }
+
+  select#vehicle-select{
+    width:100%;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:7px;
+    font-size:14px;
+    margin-bottom:16px;
+  }
+
+  .footnote{ color:var(--text-faint); font-size:11.5px; margin-top:10px; }
+</style>
+-->
+</head>
+<body>
+
+<!-- ============ AUTH SCREEN ============ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="brand"><span class="stripe"></span>Manual do Carro</div>
+      <p>Cadastro de veículos e manutenções.</p>
+    </div>
+
+    <div class="seg">
+      <button id="tab-login" class="active" onclick="showAuthTab('login')">Entrar</button>
+      <button id="tab-register" onclick="showAuthTab('register')">Criar conta</button>
+    </div>
+
+    <div id="auth-banner" class="banner"></div>
+
+    <!-- Login -->
+    <form id="login-form" onsubmit="return handleLogin(event)">
+      <div class="field">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" type="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="login-password">Senha</label>
+        <input id="login-password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="btn" type="submit">Entrar</button>
+    </form>
+
+    <!-- Register -->
+    <form id="register-form" style="display:none" onsubmit="return handleRegister(event)">
+      <div class="field">
+        <label for="reg-name">Nome</label>
+        <input id="reg-name" type="text" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="reg-birthdate">Nascimento</label>
+          <input id="reg-birthdate" type="date" required>
+        </div>
+        <div class="field">
+          <label for="reg-phone">Telefone</label>
+          <input id="reg-phone" type="text" required placeholder="11999999999">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="reg-city">Cidade</label>
+          <input id="reg-city" type="text" required>
+        </div>
+        <div class="field">
+          <label for="reg-state">Estado</label>
+          <input id="reg-state" type="text" required placeholder="SP" maxlength="2">
+        </div>
+      </div>
+      <div class="field">
+        <label for="reg-country">País</label>
+        <input id="reg-country" type="text" required value="BR">
+      </div>
+      <div class="field">
+        <label for="reg-email">E-mail</label>
+        <input id="reg-email" type="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="reg-password">Senha</label>
+        <input id="reg-password" type="password" required minlength="6" autocomplete="new-password">
+      </div>
+      <button class="btn" type="submit">Criar conta</button>
+    </form>
+
+    <details class="advanced">
+      <summary>URL da API (avançado)</summary>
+      <div class="field">
+        <input id="api-base" type="text" value="http://localhost:3000">
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="brand"><span class="stripe"></span>Manual do Carro</div>
+    <div class="who">
+      <span id="current-user-name"></span>
+      <button class="btn secondary small" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button id="nav-vehicles" class="active" onclick="showView('vehicles')">Veículos</button>
+    <button id="nav-maintenances" onclick="showView('maintenances')">Manutenções</button>
+  </nav>
+
+  <main>
+    <!-- ---- VEHICLES VIEW ---- -->
+    <section id="view-vehicles" class="view active">
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Adicionar veículo</h3>
+          <div id="vehicle-banner" class="banner"></div>
+          <form onsubmit="return handleAddVehicle(event)">
+            <div class="field">
+              <label for="v-placa">Placa</label>
+              <input id="v-placa" type="text" required placeholder="ABC-1234">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="v-marca">Marca</label>
+                <input id="v-marca" type="text" required>
+              </div>
+              <div class="field">
+                <label for="v-modelo">Modelo</label>
+                <input id="v-modelo" type="text" required>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="v-ano">Ano</label>
+                <input id="v-ano" type="number" required min="1950" max="2100">
+              </div>
+              <div class="field">
+                <label for="v-km">Km</label>
+                <input id="v-km" type="number" required min="0">
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="v-cor">Cor</label>
+                <input id="v-cor" type="text" required>
+              </div>
+              <div class="field">
+                <label for="v-combustivel">Combustível</label>
+                <input id="v-combustivel" type="text" required placeholder="flex">
+              </div>
+            </div>
+            <button class="btn" type="submit">Adicionar veículo</button>
+          </form>
+        </div>
+
+        <div>
+          <div id="vehicles-empty" class="empty" style="display:none">
+            Nenhum veículo cadastrado ainda. Adicione o primeiro ao lado.
+          </div>
+          <div id="plate-grid" class="plate-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- MAINTENANCES VIEW ---- -->
+    <section id="view-maintenances" class="view">
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Adicionar manutenção</h3>
+          <div id="maintenance-banner" class="banner"></div>
+          <div class="field">
+            <label for="vehicle-select">Veículo</label>
+            <select id="vehicle-select" onchange="onSelectVehicle(this.value)"></select>
+          </div>
+          <form onsubmit="return handleAddMaintenance(event)">
+            <div class="field">
+              <label for="m-descricao">Descrição</label>
+              <input id="m-descricao" type="text" required placeholder="Troca de óleo">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="m-custo">Custo (R$)</label>
+                <input id="m-custo" type="number" step="0.01" min="0">
+              </div>
+              <div class="field">
+                <label for="m-km">Km na data</label>
+                <input id="m-km" type="number" required min="0">
+              </div>
+            </div>
+            <button class="btn" type="submit">Adicionar manutenção</button>
+          </form>
+        </div>
+
+        <div>
+          <div id="maintenances-empty" class="empty" style="display:none">
+            Selecione um veículo para ver o histórico, ou cadastre a primeira manutenção.
+          </div>
+          <div id="maintenance-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // ---------------- state ----------------
+  const state = {
+    token: null,
+    user: null,
+    vehicles: [],
+    selectedPlate: null
+  };
+
+  function apiBase(){
+    return document.getElementById('api-base').value.replace(/\/$/, '');
+  }
+
+  async function api(path, { method = 'GET', body } = {}){
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+
+    let response;
+    try{
+      response = await fetch(apiBase() + path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+      });
+    }catch(e){
+      throw new Error('Não foi possível conectar à API em ' + apiBase() + '. Confira se o servidor está rodando (npm run dev).');
+    }
+
+    let data = null;
+    try{ data = await response.json(); }catch(e){ /* sem corpo */ }
+
+    if (!response.ok){
+      const message = (data && data.message) ? data.message : ('Erro ' + response.status);
+      throw new Error(message);
+    }
+    return data;
+  }
+
+  // ---------------- auth screen ----------------
+  function showAuthTab(tab){
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    hideBanner('auth-banner');
+  }
+
+  function showBanner(id, message, type = 'error'){
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.className = 'banner ' + type;
+  }
+  function hideBanner(id){
+    const el = document.getElementById(id);
+    el.className = 'banner';
+    el.textContent = '';
+  }
+
+  async function handleLogin(evt){
+    evt.preventDefault();
+    hideBanner('auth-banner');
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    try{
+      const data = await api('/login', { method: 'POST', body: { email, password } });
+      state.token = data.token;
+      state.user = data.user;
+      enterApp();
+    }catch(e){
+      showBanner('auth-banner', e.message);
+    }
+    return false;
+  }
+
+  async function handleRegister(evt){
+    evt.preventDefault();
+    hideBanner('auth-banner');
+    const body = {
+      name: document.getElementById('reg-name').value,
+      birthdate: document.getElementById('reg-birthdate').value,
+      city: document.getElementById('reg-city').value,
+      state: document.getElementById('reg-state').value,
+      country: document.getElementById('reg-country').value,
+      phone: document.getElementById('reg-phone').value,
+      email: document.getElementById('reg-email').value,
+      password: document.getElementById('reg-password').value
+    };
+    try{
+      await api('/users', { method: 'POST', body });
+      showAuthTab('login');
+      document.getElementById('login-email').value = body.email;
+      showBanner('auth-banner', 'Conta criada. Faça login abaixo.', 'ok');
+    }catch(e){
+      showBanner('auth-banner', e.message);
+    }
+    return false;
+  }
+
+  function logout(){
+    state.token = null;
+    state.user = null;
+    state.vehicles = [];
+    state.selectedPlate = null;
+    document.getElementById('app-screen').classList.remove('active');
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+
+  function enterApp(){
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').classList.add('active');
+    document.getElementById('current-user-name').textContent = 'Olá, ' + state.user.name;
+    showView('vehicles');
+    loadVehicles();
+  }
+
+  // ---------------- tabs ----------------
+  function showView(name){
+    document.getElementById('nav-vehicles').classList.toggle('active', name === 'vehicles');
+    document.getElementById('nav-maintenances').classList.toggle('active', name === 'maintenances');
+    document.getElementById('view-vehicles').classList.toggle('active', name === 'vehicles');
+    document.getElementById('view-maintenances').classList.toggle('active', name === 'maintenances');
+  }
+
+  // ---------------- vehicles ----------------
+  async function loadVehicles(){
+    try{
+      state.vehicles = await api('/autos');
+      renderVehicles();
+      renderVehicleSelect();
+    }catch(e){
+      showBanner('vehicle-banner', e.message);
+    }
+  }
+
+  function renderVehicles(){
+    const grid = document.getElementById('plate-grid');
+    const empty = document.getElementById('vehicles-empty');
+    grid.innerHTML = '';
+    if (!state.vehicles.length){
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    state.vehicles.forEach(v => {
+      const card = document.createElement('div');
+      card.className = 'plate-card';
+      card.innerHTML = `
+        <div class="plate-band"><span>MANUAL DO CARRO</span><span>${v.ano}</span></div>
+        <div class="plate-number mono">${v.placa}</div>
+        <div class="plate-sub">${v.marca} ${v.modelo}</div>
+        <div class="plate-chips">
+          <span class="chip">${v.cor}</span>
+          <span class="chip">${v.combustivel}</span>
+          <span class="chip mono">${Number(v.km).toLocaleString('pt-BR')} km</span>
+        </div>
+        <div class="plate-actions">
+          <button class="btn secondary small" onclick="goToMaintenances('${v.placa}')">Manutenções</button>
+          <button class="btn danger small" onclick="deleteVehicle(${v.id})">Excluir</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function renderVehicleSelect(){
+    const select = document.getElementById('vehicle-select');
+    const current = select.value;
+    select.innerHTML = '';
+    if (!state.vehicles.length){
+      const opt = document.createElement('option');
+      opt.textContent = 'Nenhum veículo cadastrado';
+      opt.value = '';
+      select.appendChild(opt);
+      state.selectedPlate = null;
+      return;
+    }
+    state.vehicles.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.placa;
+      opt.textContent = v.placa + ' — ' + v.marca + ' ' + v.modelo;
+      select.appendChild(opt);
+    });
+    const toSelect = state.selectedPlate || current || state.vehicles[0].placa;
+    select.value = toSelect;
+    onSelectVehicle(select.value);
+  }
+
+  async function handleAddVehicle(evt){
+    evt.preventDefault();
+    hideBanner('vehicle-banner');
+    const body = {
+      placa: document.getElementById('v-placa').value,
+      marca: document.getElementById('v-marca').value,
+      modelo: document.getElementById('v-modelo').value,
+      ano: Number(document.getElementById('v-ano').value),
+      km: Number(document.getElementById('v-km').value),
+      cor: document.getElementById('v-cor').value,
+      combustivel: document.getElementById('v-combustivel').value
+    };
+    try{
+      await api('/autos', { method: 'POST', body });
+      evt.target.reset();
+      showBanner('vehicle-banner', 'Veículo adicionado.', 'ok');
+      loadVehicles();
+    }catch(e){
+      showBanner('vehicle-banner', e.message);
+    }
+    return false;
+  }
+
+  async function deleteVehicle(id){
+    if (!confirm('Excluir este veículo? Isso também remove o histórico de manutenções.')) return;
+    try{
+      await api('/autos/' + id, { method: 'DELETE' });
+      loadVehicles();
+    }catch(e){
+      showBanner('vehicle-banner', e.message);
+    }
+  }
+
+  function goToMaintenances(placa){
+    state.selectedPlate = placa;
+    showView('maintenances');
+    renderVehicleSelect();
+  }
+
+  // ---------------- maintenances ----------------
+  function onSelectVehicle(placa){
+    state.selectedPlate = placa || null;
+    if (state.selectedPlate) loadMaintenances(state.selectedPlate);
+    else renderMaintenances([]);
+  }
+
+  async function loadMaintenances(placa){
+    try{
+      const list = await api('/manutencoes/' + encodeURIComponent(placa));
+      renderMaintenances(list);
+    }catch(e){
+      showBanner('maintenance-banner', e.message);
+    }
+  }
+
+  function renderMaintenances(list){
+    const container = document.getElementById('maintenance-list');
+    const empty = document.getElementById('maintenances-empty');
+    container.innerHTML = '';
+    if (!list.length){
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    list.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'm-row';
+      const date = m.data ? new Date(m.data).toLocaleDateString('pt-BR') : '';
+      row.innerHTML = `
+        <div>
+          <div class="desc">${m.descricao}</div>
+          <div class="meta">${date}</div>
+        </div>
+        <div class="km mono">${Number(m.km).toLocaleString('pt-BR')} km</div>
+        <div class="cost mono">${m.custo != null ? 'R$ ' + Number(m.custo).toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—'}</div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  async function handleAddMaintenance(evt){
+    evt.preventDefault();
+    hideBanner('maintenance-banner');
+    if (!state.selectedPlate){
+      showBanner('maintenance-banner', 'Cadastre um veículo antes de adicionar uma manutenção.');
+      return false;
+    }
+    const custoValue = document.getElementById('m-custo').value;
+    const body = {
+      placa: state.selectedPlate,
+      descricao: document.getElementById('m-descricao').value,
+      km: Number(document.getElementById('m-km').value),
+      ...(custoValue ? { custo: Number(custoValue) } : {})
+    };
+    try{
+      await api('/manutencoes', { method: 'POST', body });
+      evt.target.reset();
+      showBanner('maintenance-banner', 'Manutenção registrada.', 'ok');
+      loadMaintenances(state.selectedPlate);
+    }catch(e){
+      showBanner('maintenance-banner', e.message);
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

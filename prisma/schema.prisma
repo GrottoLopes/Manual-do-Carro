@@ -1,0 +1,62 @@
+// Prisma schema - Manual do Carro
+// Documentação: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  birthdate DateTime
+  city      String
+  state     String
+  country   String
+  phone     String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicles Vehicle[]
+
+  @@map("users")
+}
+
+model Vehicle {
+  id           Int      @id @default(autoincrement())
+  plate        String   @unique
+  brand        String
+  model        String
+  year         Int
+  km           Int
+  fuel         String
+  color        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId      Int
+  maintenances Maintenance[]
+
+  @@map("vehicles")
+}
+
+model Maintenance {
+  id          Int      @id @default(autoincrement())
+  description String
+  cost        Float?
+  km          Int
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId Int
+
+  @@map("maintenances")
+}
